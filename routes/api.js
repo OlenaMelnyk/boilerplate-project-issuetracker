@@ -71,46 +71,49 @@ module.exports = function (app) {
       .put(function (req, res){
         var project = req.params.project;
         let issueId = req.body._id;
-        delete req.body._id;
-        let updates = req.body;
-        for (var el in updates) {
-          if (!updates[el])
-            delete updates[el];
-        }
-        if (updates.open) {
-          updates.open = String(updates['open']) == 'true';
-        }
-        if (Object.keys(updates).length === 0) {
-          res.send('no updated field sent');
+        if (issueId.length != 12 && issueId.length != 24) {
+            res.send("invalid id");
         } else {
-          MongoClient.connect(CONNECTION_STRING, function(err, client) {
-            if (err) {
-              console.log('Database err', + err);
-            } else {
-              console.log('Successful database connection');
-              updates.updated_on = new Date();
-              let database = client.db("test");
-              var collection = database.collection(project);
-              collection.findAndModify({_id:new ObjectId(issueId)},
-                                       [['_id',1]],
-                                       {$set: updates},
-                                       {new: true},
-                                       function(err,doc){
-                            if (err) {
-                              res.send("could not update" + issueId + ' ' + err);
-                            } else {
-                              res.send('successfully updated');
-                            }
-                          });
-            }
-          })
+          delete req.body._id;
+          let updates = req.body;
+          for (var el in updates) {
+            if (!updates[el])
+              delete updates[el];
+          }
+          if (updates.open) {
+            updates.open = String(updates['open']) == 'true';
+          }
+          if (Object.keys(updates).length === 0) {
+            res.send('no updated field sent');
+          } else {
+            MongoClient.connect(CONNECTION_STRING, function(err, client) {
+              if (err) {
+                console.log('Database err', + err);
+              } else {
+                console.log('Successful database connection');
+                updates.updated_on = new Date();
+                let database = client.db("test");
+                var collection = database.collection(project);
+                collection.findAndModify({_id:new ObjectId(issueId)},
+                                         [['_id',1]],
+                                         {$set: updates},
+                                         {new: true},
+                                         function(err,doc){
+                              if (err) {
+                                res.send("could not update" + issueId + ' ' + err);
+                              } else {
+                                res.send('successfully updated');
+                              }
+                            });
+              }
+            })
+          }
         }
       })
 
        .delete(function (req, res){
         var project = req.params.project;
         let issueId = req.body._id;
-        console.log("ID", issueId);
         if (!issueId) {
           res.send('_id error');
         } else {
